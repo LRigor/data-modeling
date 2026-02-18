@@ -84,9 +84,7 @@ CREATE TABLE person_contact_type (
     valid_from TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     valid_to TIMESTAMP,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_active_role UNIQUE (person_id, contact_type_id, is_active) 
-        WHERE is_active = TRUE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Patient Lead
@@ -97,7 +95,7 @@ CREATE TABLE patient_lead (
     source VARCHAR(100) NOT NULL,
     landing_page_url VARCHAR(500),
     status VARCHAR(50) NOT NULL DEFAULT 'new',
-    converted_to_patient_id UUID REFERENCES patient(patient_id),
+    converted_to_patient_id UUID,
     converted_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -156,9 +154,7 @@ CREATE TABLE patient_physician_relationship (
     is_primary BOOLEAN NOT NULL DEFAULT FALSE,
     start_date DATE,
     end_date DATE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_primary_physician UNIQUE (patient_id, is_primary) 
-        WHERE is_primary = TRUE
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Clinical Trial Journey
@@ -209,6 +205,9 @@ CREATE INDEX idx_person_active ON person(is_active);
 -- Person Contact Type indexes
 CREATE INDEX idx_person_contact_type_person ON person_contact_type(person_id);
 CREATE INDEX idx_person_contact_type_active ON person_contact_type(is_active, valid_from, valid_to);
+-- Unique index for active contact types (partial index)
+CREATE UNIQUE INDEX idx_unique_active_contact_type ON person_contact_type(person_id, contact_type_id) 
+    WHERE is_active = TRUE;
 
 -- Patient Lead indexes
 CREATE INDEX idx_patient_lead_person ON patient_lead(person_id);
@@ -236,6 +235,8 @@ CREATE INDEX idx_physician_license ON physician(medical_license_number);
 CREATE INDEX idx_patient_physician_patient ON patient_physician_relationship(patient_id);
 CREATE INDEX idx_patient_physician_physician ON patient_physician_relationship(physician_id);
 CREATE INDEX idx_patient_physician_primary ON patient_physician_relationship(is_primary);
+CREATE UNIQUE INDEX idx_unique_primary_physician ON patient_physician_relationship(patient_id) 
+    WHERE is_primary = TRUE;
 
 -- Clinical Trial Journey indexes
 CREATE INDEX idx_ct_journey_patient ON clinical_trial_journey(patient_id, status);
