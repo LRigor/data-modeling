@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: mytomorrows_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mytomorrows}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mytomorrows123}
+      POSTGRES_DB: ${POSTGRES_DB:-mytomorrows_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mytomorrows"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mytomorrows_network
+
+  # FastAPI Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mytomorrows_api
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mytomorrows}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mytomorrows123}
+      POSTGRES_DB: ${POSTGRES_DB:-mytomorrows_db}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      APP_NAME: myTomorrows CRM API
+      APP_VERSION: 1.0.0
+      DEBUG: ${DEBUG:-False}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      API_V1_PREFIX: /api/v1
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+    networks:
+      - mytomorrows_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  mytomorrows_network:
+    driver: bridge
