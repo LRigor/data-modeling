@@ -1,16 +1,5 @@
 # myTomorrows CRM - Data Model Redesign
 
-## Assignment Submission
-
-This repository contains the complete solution for the myTomorrows take-home assignment, addressing both Part 1 (Data Modeling) and Part 2 (FastAPI Implementation).
-
-**Repository Access**: Please grant access to the following GitHub users:
-- Mulugruntz
-- MyT-Marshall
-- Jonas-Svensson-MyTomorrows
-- martin-myt
-- euan-holl-myt
-
 ## Overview
 
 Redesigned data model for the myTomorrows CRM system addressing normalization, data integrity, and scalability issues.
@@ -94,45 +83,38 @@ http://localhost:8000/docs
 
 **Medical Conditions** (`/api/v1/medical-conditions`)
 - `POST /` - Create condition
-- `GET /` - List conditions
-- `GET /{id}` - Get condition
+- `GET /` - List conditions (with optional `is_active` filter)
+- `GET /{id}` - Get condition by ID
+- `PUT /{id}` - Update condition
+- `DELETE /{id}` - Soft delete condition (sets `is_active=False`)
 
 ### Features
 
 - **Returning Patient Handling**: Automatic email-based matching prevents duplicates
 - **Multiple Calls**: Each call stored as separate record (no data loss)
+- **Person ↔ CallHistory Relationships**: Proper SQLAlchemy relationships between Person and CallHistory via `pn_id` (patient navigator)
+- **Soft Deletes**: Medical conditions support soft deletion via `is_active` flag
 - **Error Handling**: Custom exceptions with proper HTTP status codes
 - **Logging**: Structured logging throughout application
 - **Type Safety**: Complete type hints and Pydantic validation
 - **Container-Ready**: Docker and docker-compose configuration
 - **Production-Ready**: Database connection pooling, transaction management, health checks
-
-### Implementation Choices
-
-1. **Database**: PostgreSQL chosen for ACID compliance and JSON support
-2. **ORM**: SQLAlchemy for type-safe database operations
-3. **Validation**: Pydantic for request/response validation
-4. **Error Handling**: Custom exception classes for better error messages
-5. **Logging**: Structured logging for production monitoring
-6. **API Design**: RESTful endpoints with proper HTTP methods and status codes
-7. **Pagination**: Implemented for all list endpoints to handle large datasets
-8. **Filtering**: Support for status and medical condition filters
+- **Testing**: Comprehensive test suite with pytest
 
 ### Technology Stack
 
-- FastAPI
-- SQLAlchemy (ORM)
-- PostgreSQL
-- Pydantic (validation)
+- **FastAPI** - Modern, fast web framework
+- **SQLAlchemy 2.0** - Modern ORM with type safety
+- **PostgreSQL 15** - Production-grade relational database
+- **Pydantic v2** - Data validation and settings management
+- **pytest** - Testing framework
 
 ## Documentation
 
 All documentation is in the `docs/` directory:
 
 - `docs/ERD_DESIGN.md` - Entity specifications
-- `docs/DESIGN_SUMMARY.md` - Quick reference
 - `docs/MIGRATION_GUIDE.md` - Migration steps
-- `docs/DEPLOYMENT.md` - Deployment guide
 - `docs/QUICKSTART.md` - Setup instructions
 
 ## Project Structure
@@ -140,38 +122,36 @@ All documentation is in the `docs/` directory:
 ```
 data-modeling/
 ├── app/              # FastAPI application
+│   ├── routes/       # API route handlers
+│   ├── models.py     # SQLAlchemy models
+│   ├── schemas.py    # Pydantic schemas
+│   ├── crud.py       # Database operations
+│   └── main.py       # FastAPI app
 ├── docs/             # Documentation
 ├── tests/            # Test files
 ├── schema.sql        # Database schema
 ├── docker-compose.yml
+├── Dockerfile
 └── requirements.txt
 ```
 
-## Assignment Answers
+## Running Tests
 
-### Part 1: Data Modeling
+```bash
+# Run all tests (requires Docker Compose)
+docker compose exec api pytest
 
-**Question 1.1: Redesign Data Model**
-- Answer: See `docs/ERD_DESIGN.md` for complete entity specifications
-- Summary: Person table as single source of truth eliminates duplication. Separate journey tables support multiple EAP/CT journeys. Call History table preserves all interactions.
+# Run with verbose output
+docker compose exec api pytest -v
 
-**Question 1.2: Migration Strategy**
-- Answer: See `docs/MIGRATION_GUIDE.md` for step-by-step migration plan
-- Summary: 10-phase migration approach with data validation, rollback procedures, and timeline estimates.
+# Run specific test file
+docker compose exec api pytest tests/test_patients.py
+```
 
-### Part 2: FastAPI Implementation
-
-**Implementation**: Complete CRUD API for Patient, Call History, and Medical Conditions
-- **Assumptions Documented**: See "Solution" and "Features" sections below
-- **Production Quality**: Type hints, error handling, logging, validation
-- **Container-Ready**: Docker and docker-compose included
-- **Cloud Deployment**: See `docs/DEPLOYMENT.md` for AWS, GCP, Azure
-- **Infrastructure-as-Code**: Terraform and Kubernetes examples provided
+See `docs/QUICKSTART.md` for detailed setup and testing instructions.
 
 ## Getting Started
 
 1. **Setup**: See `docs/QUICKSTART.md`
-2. **Data Model**: See `docs/DESIGN_SUMMARY.md`
+2. **Data Model**: See `docs/ERD_DESIGN.md`
 3. **Migration**: See `docs/MIGRATION_GUIDE.md`
-4. **Deployment**: See `docs/DEPLOYMENT.md`
-5. **Requirements Review**: See `ASSIGNMENT_REVIEW.md` for compliance checklist

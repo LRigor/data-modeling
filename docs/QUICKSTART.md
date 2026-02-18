@@ -99,27 +99,6 @@ uvicorn app.main:app --reload
 - Docs: http://localhost:8000/docs
 - Health: http://localhost:8000/health
 
-## API Endpoints
-
-### Patients
-- `POST /api/v1/patients` - Create patient
-- `GET /api/v1/patients` - List patients (paginated)
-- `GET /api/v1/patients/{id}` - Get patient
-- `PUT /api/v1/patients/{id}` - Update patient
-- `DELETE /api/v1/patients/{id}` - Delete patient
-- `GET /api/v1/patients/{id}/calls` - Get patient calls
-
-### Call History
-- `POST /api/v1/call-history` - Create call record
-- `GET /api/v1/call-history/{id}` - Get call
-- `PUT /api/v1/call-history/{id}` - Update call
-- `DELETE /api/v1/call-history/{id}` - Delete call
-
-### Medical Conditions
-- `POST /api/v1/medical-conditions` - Create condition
-- `GET /api/v1/medical-conditions` - List conditions
-- `GET /api/v1/medical-conditions/{id}` - Get condition
-
 ## Example Usage
 
 See `example_usage.py` for complete examples:
@@ -147,5 +126,4 @@ python example_usage.py
 
 1. Review API documentation at `/docs`
 2. Read `README.md` for project overview
-3. Check `DEPLOYMENT.md` for production deployment
-4. Explore `ERD_DESIGN.md` for data model details
+3. Explore `ERD_DESIGN.md` for data model details
