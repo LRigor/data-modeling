@@ -51,6 +51,14 @@ class MedicalConditionCreate(MedicalConditionBase):
     pass
 
 
+class MedicalConditionUpdate(BaseModel):
+    """Schema for updating a Medical Condition."""
+    name: Optional[str] = Field(None, min_length=1, max_length=200, description="Condition name")
+    abbreviation: Optional[str] = Field(None, max_length=50, description="Abbreviation")
+    description: Optional[str] = Field(None, description="Description")
+    is_active: Optional[bool] = Field(None, description="Active status")
+
+
 class MedicalConditionResponse(MedicalConditionBase):
     """Schema for Medical Condition response."""
     medical_condition_id: UUID

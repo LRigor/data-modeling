@@ -5,12 +5,17 @@ Configuration is loaded from environment variables with support for
 default values and .env file loading.
 """
 import os
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Optional
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False
+    )
     
     app_name: str = "myTomorrows CRM API"
     app_version: str = "1.0.0"
@@ -25,10 +30,6 @@ class Settings(BaseSettings):
     
     api_v1_prefix: str = "/api/v1"
     cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8000"]
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
     
     @property
     def get_database_url(self) -> str:

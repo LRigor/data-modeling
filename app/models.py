@@ -24,7 +24,7 @@ class Person(Base):
     
     patient = relationship("Patient", back_populates="person", uselist=False)
     physician = relationship("Physician", back_populates="person", uselist=False)
-    call_histories = relationship("CallHistory", back_populates="patient", foreign_keys="CallHistory.patient_id")
+    navigated_calls = relationship("CallHistory", back_populates="patient_navigator", foreign_keys="CallHistory.pn_id")
     
     def __repr__(self):
         return f"<Person(id={self.person_id}, email={self.email})>"
@@ -86,6 +86,7 @@ class CallHistory(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     
     patient = relationship("Patient", back_populates="call_histories")
+    patient_navigator = relationship("Person", back_populates="navigated_calls", foreign_keys="CallHistory.pn_id")
     
     def __repr__(self):
         return f"<CallHistory(id={self.call_id}, patient_id={self.patient_id})>"

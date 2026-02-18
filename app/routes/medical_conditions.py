@@ -113,3 +113,83 @@ def read_medical_condition(
             detail=f"Medical condition {medical_condition_id} not found"
         )
     return db_condition
+
+
+@router.put(
+    "/{medical_condition_id}",
+    response_model=schemas.MedicalConditionResponse,
+    summary="Update a medical condition",
+    description="Update an existing medical condition in the lookup table."
+)
+def update_medical_condition(
+    medical_condition_id: UUID,
+    medical_condition_update: schemas.MedicalConditionUpdate,
+    db: Session = Depends(get_db)
+) -> schemas.MedicalConditionResponse:
+    """
+    Update an existing medical condition.
+    
+    Args:
+        medical_condition_id: UUID of the medical condition to update
+        medical_condition_update: Medical condition update schema
+        db: Database session dependency
+        
+    Returns:
+        Updated medical condition response
+        
+    Raises:
+        HTTPException: 404 if medical condition not found, 500 if database operation fails
+    """
+    try:
+        db_condition = crud.update_medical_condition(db, medical_condition_id, medical_condition_update)
+        if db_condition is None:
+            logger.warning(f"Medical condition {medical_condition_id} not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Medical condition {medical_condition_id} not found"
+            )
+        logger.info(f"Successfully updated medical condition {medical_condition_id}")
+        return db_condition
+    except DatabaseError as e:
+        logger.error(f"Database error updating medical condition: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update medical condition due to database error"
+        )
+
+
+@router.delete(
+    "/{medical_condition_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a medical condition",
+    description="Soft delete a medical condition by setting is_active=False."
+)
+def delete_medical_condition(
+    medical_condition_id: UUID,
+    db: Session = Depends(get_db)
+) -> None:
+    """
+    Soft delete a medical condition (sets is_active=False).
+    
+    Args:
+        medical_condition_id: UUID of the medical condition to delete
+        db: Database session dependency
+        
+    Raises:
+        HTTPException: 404 if medical condition not found, 500 if database operation fails
+    """
+    try:
+        success = crud.delete_medical_condition(db, medical_condition_id)
+        if not success:
+            logger.warning(f"Medical condition {medical_condition_id} not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Medical condition {medical_condition_id} not found"
+            )
+        logger.info(f"Successfully soft deleted medical condition {medical_condition_id}")
+    except DatabaseError as e:
+        logger.error(f"Database error deleting medical condition: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete medical condition due to database error"
+        )

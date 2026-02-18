@@ -137,15 +137,96 @@ def create_medical_condition(
     medical_condition: schemas.MedicalConditionCreate
 ) -> models.MedicalCondition:
     """Create a new medical condition."""
-    db_condition = models.MedicalCondition(
-        name=medical_condition.name,
-        abbreviation=medical_condition.abbreviation,
-        description=medical_condition.description
-    )
-    db.add(db_condition)
-    db.commit()
-    db.refresh(db_condition)
-    return db_condition
+    try:
+        db_condition = models.MedicalCondition(
+            name=medical_condition.name,
+            abbreviation=medical_condition.abbreviation,
+            description=medical_condition.description
+        )
+        db.add(db_condition)
+        db.commit()
+        db.refresh(db_condition)
+        logger.info(f"Created medical condition {db_condition.medical_condition_id}")
+        return db_condition
+    except IntegrityError as e:
+        db.rollback()
+        logger.error(f"Integrity error creating medical condition: {e}")
+        raise DatabaseError(f"Failed to create medical condition: duplicate name or constraint violation", e)
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Database error creating medical condition: {e}")
+        raise DatabaseError(f"Database operation failed: {str(e)}", e)
+
+
+def update_medical_condition(
+    db: Session,
+    medical_condition_id: UUID,
+    medical_condition_update: schemas.MedicalConditionUpdate
+) -> Optional[models.MedicalCondition]:
+    """
+    Update a medical condition.
+    
+    Args:
+        db: Database session
+        medical_condition_id: UUID of the medical condition to update
+        medical_condition_update: Update schema with fields to update
+        
+    Returns:
+        Updated MedicalCondition model instance or None if not found
+        
+    Raises:
+        DatabaseError: If database operation fails
+    """
+    try:
+        db_condition = get_medical_condition(db, medical_condition_id)
+        if not db_condition:
+            return None
+        
+        update_data = medical_condition_update.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(db_condition, field, value)
+        
+        db.commit()
+        db.refresh(db_condition)
+        logger.info(f"Updated medical condition {medical_condition_id}")
+        return db_condition
+    except IntegrityError as e:
+        db.rollback()
+        logger.error(f"Integrity error updating medical condition: {e}")
+        raise DatabaseError(f"Failed to update medical condition: duplicate name or constraint violation", e)
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Database error updating medical condition: {e}")
+        raise DatabaseError(f"Database operation failed: {str(e)}", e)
+
+
+def delete_medical_condition(db: Session, medical_condition_id: UUID) -> bool:
+    """
+    Soft delete a medical condition (set is_active=False).
+    
+    Args:
+        db: Database session
+        medical_condition_id: UUID of the medical condition to delete
+        
+    Returns:
+        True if successful, False if medical condition not found
+        
+    Raises:
+        DatabaseError: If database operation fails
+    """
+    try:
+        db_condition = get_medical_condition(db, medical_condition_id)
+        if not db_condition:
+            return False
+        
+        db_condition.is_active = False
+        db.commit()
+        logger.info(f"Soft deleted medical condition {medical_condition_id}")
+        return True
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"Database error deleting medical condition: {e}")
+        raise DatabaseError(f"Database operation failed: {str(e)}", e)
 
 
 def get_patient(db: Session, patient_id: UUID) -> Optional[models.Patient]:
